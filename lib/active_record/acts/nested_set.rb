@@ -110,11 +110,25 @@ module ActiveRecord
 
             def parent_column() "#{configuration[:parent_column]}" end
 
+            belongs_to :set_parent, :class_name => "#{self.base_class.to_s}", :foreign_key => :parent_id  
           EOV
         end
       end
 
       module InstanceMethods
+        
+        # Return an array of direct parents top to bottom
+        def ancestry(object = self, list=[])
+          return list.flatten.compact.reverse if object.nil?
+          if object.root?
+            return list.flatten.compact.reverse
+          else
+            my_parent = object.set_parent
+            list << my_parent
+            return ancestry(my_parent, list)
+          end
+        end
+        
         # Returns +true+ is this is a root node.
         def root?
           parent_id = self[parent_column]
